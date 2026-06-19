@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block title %}Recommend Books - LuminaBook Recommender{% endblock %}
+
+{% block active_recommend %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+    .results-wrapper {
+        margin-top: 3rem;
+    }
+
+    .original-book-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3.5rem;
+    }
+
+    .original-book-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2rem;
+        padding: 1.8rem;
+        max-width: 580px;
+        width: 100%;
+        border: 2px dashed rgba(59, 157, 248, 0.4);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 24px;
+        position: relative;
+    }
+
+    .original-badge {
+        position: absolute;
+        top: -12px;
+        left: 24px;
+        background: var(--primary);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(59, 157, 248, 0.3);
+    }
+
+    .original-img-container {
+        width: 130px;
+        height: 195px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .original-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .original-info {
+        flex-grow: 1;
+    }
+
+    .original-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .original-author {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .original-status {
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .alert-box {
+        background: rgba(59, 157, 248, 0.08);
+        border: 1px solid rgba(59, 157, 248, 0.2);
+        color: #1e6fa5;
+        padding: 1.2rem 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+
+    .alert-box i {
+        font-size: 1.2rem;
+        margin-top: 0.1rem;
+        color: var(--primary);
+    }
+
+    @media (max-width: 576px) {
+        .original-book-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            gap: 1.2rem;
+        }
+
+        .original-img-container {
+            width: 110px;
+            height: 165px;
+        }
+
+        .original-badge {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Search / Rec Hero Section -->
+<div class="search-hero">
+    <h1>Book Recommendations</h1>
+    <p>Type a book you loved and we will recommend similar books using Collaborative Filtering.</p>
+
+    <div class="search-form-container">
+        <form id="searchForm" action="/recommend_books" method="POST">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-wand-magic-sparkles search-icon" style="color: var(--primary);"></i>
+                <input type="text" id="bookSearchInput" name="user_input" class="search-input"
+                    placeholder="Search a book by name" value="{{ user_input if user_input else '' }}"
+                    autocomplete="off" required>
+                <button type="submit" class="search-submit-btn">
+                    <span>Recommend</span>
+                    <i class="fa-solid fa-circle-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+        <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
+    </div>
+</div>
+
+<!-- Results Section -->
+{% if original_book or data or error_message %}
+<div class="results-wrapper">
+
+    <!-- Error Alert -->
+    {% if error_message %}
+    <div class="alert-box">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+            {{ error_message }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. The Original Book Searched For -->
+    {% if original_book %}
+    <div class="section-header">
+        <h2>Book Searched</h2>
+    </div>
+    <div class="original-book-container">
+        <div class="glass-card original-book-card">
+            <span class="original-badge">Searched Book</span>
+            <div class="original-img-container">
+                <img class="original-img" src="{{ original_book.image }}" alt="{{ original_book.title }}"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200';">
+            </div>
+            <div class="original-info">
+                <h3 class="original-title">{{ original_book.title }}</h3>
+                <p class="original-author">by {{ original_book.author }}</p>
+                <div class="book-meta" style="border-top: none; padding-top: 0; margin-top: 0.5rem; justify-content: flex-start; gap: 1.5rem;">
+                    <span class="book-votes">
+                        <i class="fa-solid fa-thumbs-up" style="color: var(--primary);"></i> {{ original_book.votes }} votes
+                    </span>
+                    <span class="book-rating">
+                        <i class="fa-solid fa-star" style="color: #fbbf24;"></i> {{ "%.1f"|format(original_book.rating) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 2. The Recommended Books -->
+{% if data %}
+<div class="section-header">
+    <h2>{% if error_message %}Popular Alternatives{% else %}Recommended Books{% endif %}</h2>
+</div>
+<div class="grid-container">
+    {% for i in data %}
+    <div class="glass-card book-card">
+        <div class="book-img-container">
+            <img class="book-img" src="{{ i.image }}" alt="{{ i.title }}"
+                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200';">
+        </div>
+        <div class="book-info">
+            <h3 class="book-title" title="{{ i.title }}">{{ i.title }}</h3>
+            <p class="book-author">by {{ i.author }}</p>
+            <div class="book-meta">
+                <span class="book-votes">
+                    <i class="fa-solid fa-thumbs-up" style="color: var(--primary);"></i> {{ i.votes }} votes
+                </span>
+                <span class="book-rating">
+                    <i class="fa-solid fa-star" style="color: #fbbf24;"></i> {{ "%.1f"|format(i.rating) }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+</div>
+{% else %}
+<!-- Initial page load state (no search yet) -->
+<div style="text-align: center; margin: 4rem 0; color: var(--text-muted);">
+    <i class="fa-solid fa-book-bookmark"
+        style="font-size: 3.5rem; color: rgba(59, 157, 248, 0.25); margin-bottom: 1rem;"></i>
+    <h3>Your recommendations will appear here</h3>
+    <p>Type a book name in the box above to get started!</p>
+</div>
+{% endif %}
+{% endblock %}

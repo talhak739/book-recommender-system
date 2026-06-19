@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - LuminaBook Recommender{% endblock %}
+
+{% block active_home %}active{% endblock %}
+
+{% block content %}
+<!-- Search Hero Section -->
+<div class="search-hero">
+    <h1>Discover Your Next Read</h1>
+    <p>Search over 240k books to get curated recommendations instantly.</p>
+
+    <div class="search-form-container">
+        <form id="searchForm" action="/recommend_books" method="POST">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" id="bookSearchInput" name="user_input" class="search-input"
+                    placeholder="Search for a book by title" autocomplete="off" required>
+                <button type="submit" class="search-submit-btn">
+                    <span>Search</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+        <!-- Dropdown suggestions container -->
+        <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
+    </div>
+</div>
+
+<!-- Top 50 Books Section -->
+<div class="section-header">
+    <h2>Top 50 Popular Books</h2>
+</div>
+
+<div class="grid-container">
+    {% for i in range(book_name|length) %}
+    <div class="glass-card book-card">
+        <div class="book-img-container">
+            <img class="book-img" src="{{ image[i] }}" alt="{{ book_name[i] }}"
+                onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200';">
+        </div>
+        <div class="book-info">
+            <h3 class="book-title" title="{{ book_name[i] }}">{{ book_name[i] }}</h3>
+            <p class="book-author">by {{ author[i] }}</p>
+            <div class="book-meta">
+                <span class="book-votes">
+                    <i class="fa-solid fa-thumbs-up" style="color: var(--primary);"></i> {{ votes[i] }} votes
+                </span>
+                <span class="book-rating">
+                    <i class="fa-solid fa-star" style="color: #fbbf24;"></i> {{ "%.1f"|format(rating[i]) }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
